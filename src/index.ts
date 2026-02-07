@@ -425,6 +425,27 @@ const opSecretsPlugin = {
       { commands: ["op-secrets"] },
     );
 
+    // ── Service: resolve op:// references at startup ──────────────
+
+    api.registerService?.({
+      id: "op-secret-resolver",
+      async start(ctx: any) {
+        try {
+          // Resolve all op:// references in the config
+          const resolved = await resolveSecretRefs(ctx.config);
+          
+          // Mutate config in-place with resolved secrets
+          Object.assign(ctx.config, resolved);
+          
+          ctx.logger.info("1password: op:// secret references resolved");
+        } catch (err: any) {
+          ctx.logger.warn(
+            `1password: failed to resolve secret references: ${err.message}`
+          );
+        }
+      },
+    });
+
     api.logger.info(
       `1password plugin registered (vault: ${defaultVault}, SDK mode)`,
     );

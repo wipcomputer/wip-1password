@@ -238,6 +238,51 @@ const tokenPath = pluginConfig?.tokenPath || `${process.env.HOME}/.openclaw/secr
 - `openclaw op-secrets test` — calls `listVaults()`, prints vault names
 - `openclaw op-secrets read <item>` — calls `resolveSecret()`, prints redacted preview (first 6 chars + length + last 4 chars)
 
+### 2.4 `resolveSecretRefs` utility
+
+Create and export a `resolveSecretRefs<T>(obj: T): Promise<T>` function that:
+- Recursively walks any JS object
+- For any string matching `op://vault/item/field`, resolves it via `resolveSecret()`
+- Returns a new object with resolved values (non-matching values pass through)
+- Handles arrays and nested objects
+
+This is the core utility that the startup service uses, and is also exported for programmatic use by other plugins.
+
+### 2.5 Write tool (`op_write_secret`)
+
+Registers an `op_write_secret` tool that:
+- Parameters: `item` (required), `value` (required), `vault` (optional), `field` (optional, default `"api key"`)
+- Checks if item already exists in the vault (case-insensitive title match)
+- If exists: gets the full item, finds/updates the field, puts it back via `client.items.put()`
+- If new: creates via `client.items.create()` with `ItemCategory.ApiCredentials` and `ItemFieldType.Concealed`
+- Registered as `{ optional: true }`
+- Requires `write_items` permission on the service account
+
+### 2.6 Startup service (`op-secret-resolver`)
+
+Register a service via `api.registerService()` that runs at OpenClaw startup:
+```typescript
+api.registerService?.({
+  id: "op-secret-resolver",
+  async start(ctx: any) {
+    const resolved = await resolveSecretRefs(ctx.config);
+    Object.assign(ctx.config, resolved);
+  },
+});
+```
+
+This resolves `op://` references in `openclaw.json` (the main config). Note:
+- Uses `Object.assign` for shallow merge — works because `resolveSecretRefs` returns a full deep copy
+- Only resolves `ctx.config` — cannot resolve `auth-profiles.json` (separate subsystem)
+- Runs before agents start, so resolved values are available immediately
+
+### 2.7 CLI resolve command
+
+Add a third CLI command `openclaw op-secrets resolve <file>` that:
+- Reads a JSON file, resolves `op://` refs (dry run)
+- Shows which keys were resolved with redacted values
+- Useful for verifying which refs exist in a config file
+
 ---
 
 ## Step 3: Skill File (`skills/op-secrets/SKILL.md`)
@@ -361,7 +406,7 @@ openclaw-1password/
 │   ├── PRD.md                # Product requirements
 │   └── DEVELOPMENT.md        # This file
 ├── src/
-│   └── index.ts              # Plugin code (~100 lines)
+│   └── index.ts              # Plugin code (~480 lines)
 ├── skills/
 │   └── op-secrets/
 │       └── SKILL.md          # Agent-facing skill documentation

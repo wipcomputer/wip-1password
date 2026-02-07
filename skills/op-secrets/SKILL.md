@@ -1,6 +1,6 @@
 ---
 name: op-secrets
-description: Read secrets from 1Password using the 1password plugin tools (SDK mode, fully headless).
+description: Read and write secrets from 1Password using the 1password plugin tools (SDK mode, fully headless).
 metadata:
   {
     "openclaw":
@@ -13,7 +13,7 @@ metadata:
 
 # 1Password Secrets (SDK)
 
-Use the `op_read_secret` and `op_list_items` tools to access 1Password secrets directly. Fully headless via service account — no desktop app or biometrics needed.
+Use the `op_read_secret`, `op_list_items`, and `op_write_secret` tools to access 1Password secrets directly. Fully headless via service account — no desktop app or biometrics needed.
 
 ## Tools
 
@@ -30,6 +30,15 @@ List all items in a 1Password vault.
 
 Parameters:
 - `vault` (optional): Vault name (default: from plugin config)
+
+### op_write_secret
+Create or update a secret in 1Password. Requires write access on the service account.
+
+Parameters:
+- `item` (required): Item title (e.g. "New API Key")
+- `value` (required): The secret value to store
+- `vault` (optional): Vault name (default: from plugin config)
+- `field` (optional): Field name (default: "api key")
 
 ## Guardrails
 
