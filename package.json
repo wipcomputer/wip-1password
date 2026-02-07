@@ -1,5 +1,5 @@
 {
-  "name": "@openclaw/1password",
+  "name": "@openclaw/op-secrets",
   "version": "0.1.0",
   "description": "OpenClaw plugin for 1Password secrets via JS SDK",
   "type": "module",

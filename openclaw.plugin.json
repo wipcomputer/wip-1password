@@ -1,5 +1,5 @@
 {
-  "id": "1password",
+  "id": "op-secrets",
   "name": "1Password Secrets",
   "description": "Read secrets from 1Password via JS SDK (headless, service account)",
   "skills": ["./skills"],

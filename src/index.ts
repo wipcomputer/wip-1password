@@ -116,7 +116,7 @@ export async function resolveSecretRefs<T>(obj: T): Promise<T> {
 // ── plugin ──────────────────────────────────────────────────────────
 
 const opSecretsPlugin = {
-  id: "1password",
+  id: "op-secrets",
   name: "1Password Secrets",
   description:
     "Read secrets from 1Password via JS SDK (headless, no desktop app needed)",
@@ -426,17 +426,36 @@ const opSecretsPlugin = {
     );
 
     // ── Service: resolve op:// references at startup ──────────────
+    // Config mutation via Object.assign doesn't reliably propagate to all
+    // subsystems (memory search reads a separate config snapshot). Instead,
+    // resolve known secrets and set them as environment variables, which are
+    // globally visible.
 
     api.registerService?.({
       id: "op-secret-resolver",
       async start(ctx: any) {
         try {
-          // Resolve all op:// references in the config
+          // Resolve op:// refs in config and mutate in-place (best effort)
           const resolved = await resolveSecretRefs(ctx.config);
-          
-          // Mutate config in-place with resolved secrets
           Object.assign(ctx.config, resolved);
-          
+
+          // Resolve OpenAI key directly from 1Password and set as env var.
+          // Memory search uses resolveApiKeyForProvider() which checks
+          // process.env.OPENAI_API_KEY as a fallback — so we set it here.
+          // The config should NOT have remote.apiKey set, because if it does,
+          // memory search uses it directly (skipping the env var fallback).
+          if (!process.env.OPENAI_API_KEY) {
+            try {
+              const key = await resolveSecret(defaultVault, "OpenAI API", "api key");
+              if (key) {
+                process.env.OPENAI_API_KEY = key;
+                ctx.logger.info("1password: set OPENAI_API_KEY from 1Password");
+              }
+            } catch (err: any) {
+              ctx.logger.warn(`1password: failed to resolve OpenAI key: ${err.message}`);
+            }
+          }
+
           ctx.logger.info("1password: op:// secret references resolved");
         } catch (err: any) {
           ctx.logger.warn(
