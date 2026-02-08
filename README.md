@@ -233,6 +233,152 @@ The service account token does not expire (unless you set `--expires-in`). It su
 
 **Write operations fail** — The service account needs `write_items` permission. See [Write Support](#write-support).
 
+## Developer Guide: Using 1Password in Your Own Projects
+
+This section covers how to use 1Password secrets in new OpenClaw plugins, MCP servers, standalone scripts, or any Node.js project that needs secrets from the same vault.
+
+### Option 1: Use the `op` CLI (simplest, any language)
+
+Shell out to the `op` CLI with the service account token. This is what lesa-bridge uses.
+
+```typescript
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+const saToken = readFileSync(
+  `${process.env.HOME}/.openclaw/secrets/op-sa-token`,
+  "utf-8"
+).trim();
+
+const apiKey = execSync(
+  `op read "op://Agent Secrets/OpenAI API/api key"`,
+  {
+    env: { ...process.env, OP_SERVICE_ACCOUNT_TOKEN: saToken },
+    encoding: "utf-8",
+    timeout: 10000,
+  }
+).trim();
+```
+
+**Pros:** No native dependencies, works in any language, one-liner per secret.
+**Cons:** Requires `op` CLI installed (`brew install 1password-cli`), subprocess overhead.
+
+### Option 2: Use the 1Password JS SDK (this plugin's approach)
+
+```typescript
+import { createClient } from "@1password/sdk";
+import { readFileSync } from "node:fs";
+
+const token = readFileSync(
+  `${process.env.HOME}/.openclaw/secrets/op-sa-token`,
+  "utf-8"
+).trim();
+
+const client = await createClient({
+  auth: token,
+  integrationName: "MyProject",
+  integrationVersion: "0.1.0",
+});
+
+// Resolve a secret
+const apiKey = await client.secrets.resolve(
+  "op://Agent Secrets/OpenAI API/api key"
+);
+
+// List vaults
+const vaults = await client.vaults.list();
+
+// List items in a vault
+const items = await client.items.list(vaultId);
+```
+
+**Pros:** No subprocess, faster, full API (list/create/update items).
+**Cons:** Native dependency (`@1password/sdk`), larger install footprint.
+
+### Option 3: Use the plugin's tools at runtime (OpenClaw agents only)
+
+If your code runs as an OpenClaw agent or plugin, call the existing `op_read_secret` tool:
+
+```
+op_read_secret({ item: "OpenAI API", vault: "Agent Secrets", field: "api key" })
+```
+
+No code needed — the tool is already registered by this plugin.
+
+### Patterns for Common Scenarios
+
+**Resolve a key at startup, cache it:**
+```typescript
+let cachedKey: string | null = null;
+
+function getApiKey(): string {
+  if (cachedKey) return cachedKey;
+  cachedKey = execSync(`op read "op://Agent Secrets/MyService/api key"`, {
+    env: { ...process.env, OP_SERVICE_ACCOUNT_TOKEN: saToken },
+    encoding: "utf-8",
+    timeout: 10000,
+  }).trim();
+  return cachedKey;
+}
+```
+
+**Set as environment variable (for libraries that read `process.env`):**
+```typescript
+process.env.OPENAI_API_KEY = await client.secrets.resolve(
+  "op://Agent Secrets/OpenAI API/api key"
+);
+// Now any library that checks process.env.OPENAI_API_KEY will find it
+```
+
+**Store a new secret (requires write_items permission):**
+```typescript
+await client.items.create({
+  vaultId: "vault-uuid",
+  title: "New API Key",
+  category: ItemCategory.ApiCredential,
+  fields: [
+    {
+      id: "api_key",
+      title: "api key",
+      value: "sk-proj-...",
+      fieldType: ItemFieldType.Concealed,
+    },
+  ],
+});
+```
+
+### Key Rules
+
+1. **Never hardcode secrets.** Use `op://` references in config, resolve at runtime.
+2. **Never log secrets.** Use the `redact()` helper for debug output.
+3. **Cache the client.** Creating a 1Password SDK client is expensive (~200ms). Create once, reuse.
+4. **Cache resolved values.** Secrets don't change mid-session. Resolve once at startup.
+5. **Service account token location:** Always `~/.openclaw/secrets/op-sa-token`. Don't invent new paths.
+6. **Vault name:** `Agent Secrets` is the shared vault. Add items there unless you need isolation.
+7. **Item naming:** Use descriptive titles like `"OpenAI API"`, `"GitHub Token"`. Only alphanumeric, `_`, `.`, `-` characters.
+8. **SA permissions are immutable.** If you need `write_items` and the current SA only has `read_items`, you must create a new service account.
+
+### Adding a New Secret
+
+```bash
+# Via op CLI
+OP_SERVICE_ACCOUNT_TOKEN=$(cat ~/.openclaw/secrets/op-sa-token) \
+  op item create --category "API Credential" --title "My New Service" \
+  --vault "Agent Secrets" 'api key=YOUR_KEY_HERE'
+
+# Verify
+OP_SERVICE_ACCOUNT_TOKEN=$(cat ~/.openclaw/secrets/op-sa-token) \
+  op read "op://Agent Secrets/My New Service/api key"
+```
+
+### Example Projects Using 1Password
+
+| Project | How it uses 1Password |
+|---------|----------------------|
+| `openclaw-1password` (this) | JS SDK, startup resolver, agent tools |
+| `lesa-bridge` | `op` CLI, resolves OpenAI key at MCP server startup |
+| `openclaw-context-embeddings` | Reads `process.env.OPENAI_API_KEY` (set by this plugin at boot) |
+
 ## License
 
 MIT
