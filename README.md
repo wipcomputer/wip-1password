@@ -67,7 +67,7 @@ Add to `~/.openclaw/openclaw.json`:
 {
   "plugins": {
     "entries": {
-      "1password": {
+      "op-secrets": {
         "enabled": true,
         "config": {
           "defaultVault": "Agent Secrets"
@@ -78,33 +78,40 @@ Add to `~/.openclaw/openclaw.json`:
 }
 ```
 
+**Note:** The config key must be `op-secrets` (matching the plugin manifest `id`), not `1password`.
+
 ### 5. Test
 
 ```bash
 openclaw op-secrets test
 ```
 
-### 6. Replace plaintext keys with `op://` references
+### 6. Using `op://` references in config
 
-In `openclaw.json`, replace any plaintext API keys with `op://` URIs:
+The plugin resolves `op://vault/item/field` strings in `openclaw.json` at startup. The real key never appears on disk.
 
+**Example: a custom config field**
 ```json
 {
-  "agents": {
-    "defaults": {
-      "memorySearch": {
-        "remote": {
-          "apiKey": "op://Agent Secrets/OpenAI API/api key"
-        }
-      }
-    }
+  "someService": {
+    "apiKey": "op://Agent Secrets/Some Service/api key"
   }
 }
 ```
 
-The plugin resolves these at startup. The real key never appears on disk.
+**Important: OpenAI API key for memory search**
 
-**Note:** This only works for `openclaw.json`. Auth profile tokens in `auth-profiles.json` cannot use `op://` refs — see [Limitations](#limitations).
+Do **NOT** put an `apiKey` in `memorySearch.remote`. OpenClaw's `resolveOpenAiEmbeddingClient()` checks `remote.apiKey` first — if any value exists (even an `op://` reference), it uses it directly and **never** falls through to the env var. Instead, leave `"remote": {}` empty. The plugin resolves the OpenAI key from 1Password and sets `process.env.OPENAI_API_KEY` at startup; memory search picks it up from the env var.
+
+```jsonc
+// CORRECT — env var fallback works
+"memorySearch": { "remote": {} }
+
+// WRONG — blocks the env var fallback, key never resolves
+"memorySearch": { "remote": { "apiKey": "op://Agent Secrets/OpenAI API/api key" } }
+```
+
+**Note:** `op://` resolution only works for `openclaw.json`. Auth profile tokens in `auth-profiles.json` cannot use `op://` refs — see [Limitations](#limitations).
 
 ## Agent Tools
 
@@ -185,7 +192,7 @@ Then update the token at `~/.openclaw/secrets/op-sa-token`.
 
 ## Configuration
 
-Plugin config in `openclaw.json` under `plugins.entries.1password.config`:
+Plugin config in `openclaw.json` under `plugins.entries.op-secrets.config`:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
