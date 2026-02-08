@@ -378,6 +378,7 @@ OP_SERVICE_ACCOUNT_TOKEN=$(cat ~/.openclaw/secrets/op-sa-token) \
 | `openclaw-1password` (this) | JS SDK, startup resolver, agent tools |
 | `lesa-bridge` | `op` CLI, resolves OpenAI key at MCP server startup |
 | `openclaw-context-embeddings` | Reads `process.env.OPENAI_API_KEY` (set by this plugin at boot) |
+| `openclaw-tavily` | JS SDK, resolves Tavily API key at startup, sets `TAVILY_API_KEY` env var |
 
 ## License
 
