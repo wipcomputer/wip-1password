@@ -1,6 +1,6 @@
 ---
 name: op-secrets
-description: Read and write secrets from 1Password using the 1password plugin tools (SDK mode, fully headless).
+description: Read and write secrets from 1Password (SDK mode, fully headless). Use when user says "get the API key", "read secret", "store this password", "check 1Password", "what's the token for", or when any operation requires retrieving or storing credentials.
 metadata:
   {
     "openclaw":
