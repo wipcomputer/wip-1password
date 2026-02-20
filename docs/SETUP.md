@@ -28,7 +28,7 @@ Service accounts **cannot** access built-in vaults (Shared, Employee, Private). 
 
 ### Via 1Password.com (web)
 
-1. Sign in to your 1Password account (e.g. `wipcomputer.1password.com`)
+1. Sign in to your 1Password account
 2. Click **New Vault** in the sidebar (or **+** button)
 3. Name it `Agent Secrets` (or whatever you prefer)
 4. Click **Create Vault**

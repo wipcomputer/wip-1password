@@ -21,7 +21,7 @@ OpenClaw plugin for 1Password secrets. Uses the official JavaScript SDK with ser
 ## Prerequisites
 
 - **1Password Teams or Business plan** (required for service accounts)
-- **Account: `wipcomputer.1password.com` only.** All SDK, CLI, and service account operations use this account. No other accounts have API access.
+- **1Password account with service account support** (Teams, Business, or Enterprise)
 - **Node.js 18+**
 - **OpenClaw** 2026.1+
 
@@ -350,7 +350,7 @@ await client.items.create({
 
 ### Key Rules
 
-1. **Always use `wipcomputer.1password.com`.** This is the only account with API/SDK access.
+1. **Use your 1Password account with service account support** (Teams, Business, or Enterprise).
 2. **Never hardcode secrets.** Use `op://` references in config, resolve at runtime.
 2. **Never log secrets.** Use the `redact()` helper for debug output.
 3. **Cache the client.** Creating a 1Password SDK client is expensive (~200ms). Create once, reuse.
