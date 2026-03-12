@@ -5,7 +5,7 @@ license: MIT
 interface: [module, mcp, openclaw-plugin, skill]
 metadata:
   display-name: "1Password Secrets"
-  version: "0.2.1"
+  version: "0.2.2".2.1"
   homepage: "https://github.com/wipcomputer/wip-1password"
   author: "Parker Todd Brooks"
   category: security
@@ -27,7 +27,7 @@ metadata:
         package: "@wipcomputer/wip-1password"
         label: "Install via npm"
     emoji: "🔐"
-compatibility: Requires Node.js 18+, 1Password Teams/Business/Enterprise with service account support. OpenClaw 2026.1+.
+compatibility: Requires Node.js 18+, 1Password with service account support (all plans). OpenClaw 2026.1+.
 ---
 
 # wip-1password

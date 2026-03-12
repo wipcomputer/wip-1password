@@ -20,8 +20,7 @@
 
 ## Prerequisites
 
-- **1Password Teams or Business plan** (required for service accounts)
-- **1Password account with service account support** (Teams, Business, or Enterprise)
+- **1Password account with service account support.** Service accounts are available on all plans (Individual, Family, Teams, Business). Headless operation (no desktop app) is confirmed on Teams and Business. Lower-tier plans may require the desktop app for initial setup.
 - **Node.js 18+**
 - **OpenClaw** 2026.1+
 
@@ -350,7 +349,7 @@ await client.items.create({
 
 ### Key Rules
 
-1. **Use your 1Password account with service account support** (Teams, Business, or Enterprise).
+1. **1Password account with service account support.** All plans offer service accounts. Headless confirmed on Teams and Business.
 2. **Never hardcode secrets.** Use `op://` references in config, resolve at runtime.
 3. **Never log secrets.** Use the `redact()` helper for debug output.
 4. **Cache the client.** Creating a 1Password SDK client is expensive (~200ms). Create once, reuse.
