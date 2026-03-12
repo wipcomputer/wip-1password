@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/op-secrets",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OpenClaw plugin for 1Password secrets via JS SDK",
   "type": "module",
   "main": "dist/index.js",
@@ -31,7 +31,8 @@
     "openclaw": ">=2026.1.0"
   },
   "dependencies": {
-    "@1password/sdk": "^0.3.1"
+    "@1password/sdk": "^0.3.1",
+    "@modelcontextprotocol/sdk": "^1.27.1"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
