@@ -5,7 +5,7 @@ license: MIT
 interface: [module, mcp, openclaw-plugin, skill]
 metadata:
   display-name: "1Password Secrets"
-  version: "0.2.0".1.0"
+  version: "0.2.1".2.0"
   homepage: "https://github.com/wipcomputer/wip-1password"
   author: "Parker Todd Brooks"
   category: security
@@ -24,7 +24,7 @@ metadata:
     install:
       - id: node
         kind: node
-        package: "@openclaw/op-secrets"
+        package: "@wipcomputer/wip-1password"
         label: "Install via npm"
     emoji: "🔐"
 compatibility: Requires Node.js 18+, 1Password Teams/Business/Enterprise with service account support. OpenClaw 2026.1+.
@@ -72,7 +72,7 @@ op_write_secret({ item: "New Key", value: "sk-...", vault: "Agent Secrets" })
 ### Module
 
 ```typescript
-import { resolveSecretRefs } from "@openclaw/op-secrets";
+import { resolveSecretRefs } from "@wipcomputer/wip-1password";
 
 const resolved = await resolveSecretRefs({
   apiKey: "op://Agent Secrets/OpenAI API/api key",

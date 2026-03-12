@@ -13,7 +13,7 @@
 ### 1. Install the plugin
 
 ```bash
-openclaw plugins install @openclaw/1password
+openclaw plugins install @wipcomputer/wip-1password
 ```
 
 ### 2. Set up 1Password
@@ -137,7 +137,7 @@ The plugin registers a startup service that walks `openclaw.json` and resolves a
 The `resolveSecretRefs` utility is also exported for programmatic use:
 
 ```typescript
-import { resolveSecretRefs } from "@openclaw/1password";
+import { resolveSecretRefs } from "@wipcomputer/wip-1password";
 
 const resolved = await resolveSecretRefs({
   apiKey: "op://Agent Secrets/OpenAI API/api key",

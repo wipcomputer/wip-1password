@@ -81,7 +81,7 @@ Overwrite the generated `package.json` with:
 
 ```json
 {
-  "name": "@openclaw/1password",
+  "name": "@wipcomputer/wip-1password",
   "version": "0.1.0",
   "description": "OpenClaw plugin for 1Password secrets via JS SDK",
   "type": "module",
@@ -384,7 +384,7 @@ npm publish --access public
 ### 5.4 Verify installation
 
 ```bash
-openclaw plugins install @openclaw/1password
+openclaw plugins install @wipcomputer/wip-1password
 openclaw op-secrets test
 ```
 

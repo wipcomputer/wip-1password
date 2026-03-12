@@ -1,6 +1,6 @@
 {
-  "name": "@openclaw/op-secrets",
-  "version": "0.2.0",
+  "name": "@wipcomputer/wip-1password",
+  "version": "0.2.1",
   "description": "OpenClaw plugin for 1Password secrets via JS SDK",
   "type": "module",
   "main": "dist/index.js",
