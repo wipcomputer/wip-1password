@@ -163,7 +163,7 @@ head -c 4 ~/.openclaw/secrets/op-sa-token
 ### From npm (when published)
 
 ```bash
-openclaw plugins install @openclaw/1password
+openclaw plugins install @wipcomputer/wip-1password
 ```
 
 ### From local build

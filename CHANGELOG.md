@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 0.2.1 (2026-03-12)
+
+Restore full README with all documentation, fix broken Teach URL
+
 ## 0.2.0 (2026-03-12)
 
 # v0.2.0 ... Full Treatment

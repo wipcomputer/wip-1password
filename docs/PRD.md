@@ -17,7 +17,7 @@ This creates several risks:
 
 ## Solution
 
-An OpenClaw plugin (`@openclaw/1password`) that integrates with **1Password** via the official JavaScript SDK. Agents retrieve secrets at runtime from a 1Password vault using a service account — fully headless, no desktop app or biometric prompts required.
+An OpenClaw plugin (`@wipcomputer/wip-1password`) that integrates with **1Password** via the official JavaScript SDK. Agents retrieve secrets at runtime from a 1Password vault using a service account — fully headless, no desktop app or biometric prompts required.
 
 ## Target Users
 
@@ -59,7 +59,7 @@ An OpenClaw plugin (`@openclaw/1password`) that integrates with **1Password** vi
 
 ### Nice to Have (P2)
 
-14. **npm-publishable** — Installable via `openclaw plugins install @openclaw/1password`. Package structure is ready but not yet published.
+14. **npm-publishable** — Installable via `openclaw plugins install @wipcomputer/wip-1password`. Package structure is ready but not yet published.
 
 15. **Multiple vault support** — Service account with access to multiple vaults (already supported by the code, just needs the SA configured with access to multiple vaults).
 
