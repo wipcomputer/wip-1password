@@ -1,14 +1,31 @@
-# Op Secrets ... Technical Documentation
+# 1Password Secrets ... Technical Documentation
 
 ## What it does
 
-1. **Resolves `op://` references in `openclaw.json` at startup** — Replace plaintext API keys with `op://Agent Secrets/Item/field` references. The plugin resolves them to real values in memory when OpenClaw boots. The plaintext key never touches disk.
+1. **Gives agents tools to read and write secrets on demand** ... Agents call `op_read_secret` to pull a key from 1Password at runtime, `op_list_items` to discover what's available, or `op_write_secret` to store new credentials.
 
-2. **Gives agents tools to read and write secrets on demand** — Agents call `op_read_secret` to pull a key from 1Password at runtime, `op_list_items` to discover what's available, or `op_write_secret` to store new credentials.
+2. **MCP server for Claude Code** ... `mcp-server.mjs` provides 1Password access directly from Claude Code via MCP. Uses the `op` CLI with service account token.
 
-3. **CLI for diagnostics** — `openclaw op-secrets test` verifies 1Password connectivity. `openclaw op-secrets read` shows a redacted preview of any secret.
+3. **Resolves `op://` references in `openclaw.json` at startup** ... Replace plaintext API keys with `op://Agent Secrets/Item/field` references. The plugin resolves them to real values in memory when OpenClaw boots. The plaintext key never touches disk.
 
-## Quick start
+4. **CLI for diagnostics** ... `openclaw op-secrets test` verifies 1Password connectivity. `openclaw op-secrets read` shows a redacted preview of any secret.
+
+## Limitations
+
+- **`auth-profiles.json` cannot use `op://` refs.** This file is loaded by a separate OpenClaw subsystem that the plugin can't hook into. Auth provider tokens (Anthropic, OpenAI OAuth) must remain as real values in that file. The resolver service only handles `openclaw.json` (the main config passed to plugins via `ctx.config`).
+
+- **`op_write_secret` requires `write_items` permission** on the service account. The default setup uses `read_items` only. See [Write Support](#write-support) for setup.
+
+- **Secrets are resolved in memory only.** If OpenClaw reloads config from disk mid-session, `op://` refs need to be resolved again. The service runs at startup, so this is fine for normal operation.
+
+## Prerequisites
+
+- **1Password Teams or Business plan** (required for service accounts)
+- **1Password account with service account support** (Teams, Business, or Enterprise)
+- **Node.js 18+**
+- **OpenClaw** 2026.1+
+
+## Quick Start
 
 ### 1. Install the plugin
 
@@ -85,19 +102,19 @@ The plugin resolves `op://vault/item/field` strings in `openclaw.json` at startu
 
 **Important: OpenAI API key for memory search**
 
-Do **NOT** put an `apiKey` in `memorySearch.remote`. OpenClaw's `resolveOpenAiEmbeddingClient()` checks `remote.apiKey` first — if any value exists (even an `op://` reference), it uses it directly and **never** falls through to the env var. Instead, leave `"remote": {}` empty. The plugin resolves the OpenAI key from 1Password and sets `process.env.OPENAI_API_KEY` at startup; memory search picks it up from the env var.
+Do **NOT** put an `apiKey` in `memorySearch.remote`. OpenClaw's `resolveOpenAiEmbeddingClient()` checks `remote.apiKey` first... if any value exists (even an `op://` reference), it uses it directly and **never** falls through to the env var. Instead, leave `"remote": {}` empty. The plugin resolves the OpenAI key from 1Password and sets `process.env.OPENAI_API_KEY` at startup; memory search picks it up from the env var.
 
 ```jsonc
-// CORRECT — env var fallback works
+// CORRECT ... env var fallback works
 "memorySearch": { "remote": {} }
 
-// WRONG — blocks the env var fallback, key never resolves
+// WRONG ... blocks the env var fallback, key never resolves
 "memorySearch": { "remote": { "apiKey": "op://Agent Secrets/OpenAI API/api key" } }
 ```
 
-**Note:** `op://` resolution only works for `openclaw.json`. Auth profile tokens in `auth-profiles.json` cannot use `op://` refs — see [Limitations](#limitations).
+**Note:** `op://` resolution only works for `openclaw.json`. Auth profile tokens in `auth-profiles.json` cannot use `op://` refs... see [Limitations](#limitations).
 
-## Agent tools
+## Agent Tools
 
 ### `op_read_secret`
 
@@ -105,7 +122,7 @@ Reads a secret value from 1Password. Agents call this tool when they need an API
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `item` | Yes | — | Item title (e.g. "OpenAI API") |
+| `item` | Yes | | Item title (e.g. "OpenAI API") |
 | `vault` | No | Config default | Vault name |
 | `field` | No | `"api key"` | Field name |
 
@@ -123,16 +140,16 @@ Creates or updates a secret in 1Password. Requires `write_items` permission on t
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `item` | Yes | — | Item title (e.g. "New API Key") |
-| `value` | Yes | — | The secret value to store |
+| `item` | Yes | | Item title (e.g. "New API Key") |
+| `value` | Yes | | The secret value to store |
 | `vault` | No | Config default | Vault name |
 | `field` | No | `"api key"` | Field name |
 
 All tools are registered as **optional** and must be allowlisted in agent config to use.
 
-## Config secret resolution
+## Config Secret Resolution
 
-The plugin registers a startup service that walks `openclaw.json` and resolves any string matching `op://vault/item/field` to its real value via the 1Password SDK. Resolution happens in memory — the file on disk keeps the `op://` reference.
+The plugin registers a startup service that walks `openclaw.json` and resolves any string matching `op://vault/item/field` to its real value via the 1Password SDK. Resolution happens in memory... the file on disk keeps the `op://` reference.
 
 The `resolveSecretRefs` utility is also exported for programmatic use:
 
@@ -147,7 +164,7 @@ const resolved = await resolveSecretRefs({
 // resolved.other === "not a secret, passed through"
 ```
 
-## Cli commands
+## CLI Commands
 
 ```bash
 # Verify 1Password connectivity
@@ -162,6 +179,18 @@ openclaw op-secrets read "DB Password" --field "password"
 openclaw op-secrets resolve ~/.openclaw/openclaw.json
 ```
 
+## Write Support
+
+To enable write operations (`op_write_secret`), the service account needs `write_items` permission:
+
+```bash
+op service-account create "OpenClaw Agent" \
+  --expires-in 0 \
+  --vault "Agent Secrets:read_items,write_items"
+```
+
+Then update the token at `~/.openclaw/secrets/op-sa-token`.
+
 ## Configuration
 
 Plugin config in `openclaw.json` under `plugins.entries.op-secrets.config`:
@@ -173,7 +202,39 @@ Plugin config in `openclaw.json` under `plugins.entries.op-secrets.config`:
 
 The token path can also be set via the `OP_SA_TOKEN_PATH` environment variable.
 
-## Developer guide: using 1password in your own projects
+## How It Works
+
+1. On plugin load, the resolver service walks `openclaw.json` and resolves `op://` references in memory
+2. On first secret request, the plugin reads the service account token from disk
+3. It creates a 1Password SDK client (cached for the session lifetime)
+4. Secrets are resolved via `client.secrets.resolve("op://Vault/Item/field")`
+5. The SDK talks directly to 1Password's servers over HTTPS
+6. Secret values exist in memory only... never written to disk or logs
+
+The service account token does not expire (unless you set `--expires-in`). It survives reboots. No desktop app needed.
+
+## Security
+
+- Service account tokens grant access only to specific vaults you configure
+- The token file is `chmod 600`... only the owning user can read it
+- Secret values are never logged, cached, or written to disk by the plugin
+- The SKILL.md file instructs agents to never echo or log returned secrets
+- If a secret is exposed, rotate it in 1Password... the plugin always reads the current value
+- `op://` references in config files are safe to commit to version control
+
+## Troubleshooting
+
+**"Token file not found"** ... Make sure `~/.openclaw/secrets/op-sa-token` exists and contains your `ops_...` token.
+
+**"Vault not found"** ... Service accounts can only access custom vaults, not built-in ones (Shared, Employee, Private). Create a custom vault and grant access.
+
+**"403 Forbidden" when creating service account** ... Enable "Developer" / "Secrets Automation" in your 1Password admin console under Settings.
+
+**"Granting a service account access to the Team/Shared vault is not supported"** ... Use a custom vault name, not the built-in "Shared" vault.
+
+**Write operations fail** ... The service account needs `write_items` permission. See [Write Support](#write-support).
+
+## Developer Guide: Using 1Password in Your Own Projects
 
 This section covers how to use 1Password secrets in new OpenClaw plugins, MCP servers, standalone scripts, or any Node.js project that needs secrets from the same vault.
 
@@ -243,7 +304,7 @@ If your code runs as an OpenClaw agent or plugin, call the existing `op_read_sec
 op_read_secret({ item: "OpenAI API", vault: "Agent Secrets", field: "api key" })
 ```
 
-No code needed — the tool is already registered by this plugin.
+No code needed... the tool is already registered by this plugin.
 
 ### Patterns for Common Scenarios
 
@@ -291,13 +352,13 @@ await client.items.create({
 
 1. **Use your 1Password account with service account support** (Teams, Business, or Enterprise).
 2. **Never hardcode secrets.** Use `op://` references in config, resolve at runtime.
-2. **Never log secrets.** Use the `redact()` helper for debug output.
-3. **Cache the client.** Creating a 1Password SDK client is expensive (~200ms). Create once, reuse.
-4. **Cache resolved values.** Secrets don't change mid-session. Resolve once at startup.
-5. **Service account token location:** Always `~/.openclaw/secrets/op-sa-token`. Don't invent new paths.
-6. **Vault name:** `Agent Secrets` is the shared vault. Add items there unless you need isolation.
-7. **Item naming:** Use descriptive titles like `"OpenAI API"`, `"GitHub Token"`. Only alphanumeric, `_`, `.`, `-` characters.
-8. **SA permissions are immutable.** If you need `write_items` and the current SA only has `read_items`, you must create a new service account.
+3. **Never log secrets.** Use the `redact()` helper for debug output.
+4. **Cache the client.** Creating a 1Password SDK client is expensive (~200ms). Create once, reuse.
+5. **Cache resolved values.** Secrets don't change mid-session. Resolve once at startup.
+6. **Service account token location:** Always `~/.openclaw/secrets/op-sa-token`. Don't invent new paths.
+7. **Vault name:** `Agent Secrets` is the shared vault. Add items there unless you need isolation.
+8. **Item naming:** Use descriptive titles like `"OpenAI API"`, `"GitHub Token"`. Only alphanumeric, `_`, `.`, `-` characters.
+9. **SA permissions are immutable.** If you need `write_items` and the current SA only has `read_items`, you must create a new service account.
 
 ### Adding a New Secret
 
@@ -316,7 +377,7 @@ OP_SERVICE_ACCOUNT_TOKEN=$(cat ~/.openclaw/secrets/op-sa-token) \
 
 | Project | How it uses 1Password |
 |---------|----------------------|
-| `openclaw-1password` (this) | JS SDK, startup resolver, agent tools |
+| `wip-1password` (this) | JS SDK, startup resolver, agent tools |
 | `lesa-bridge` | `op` CLI, resolves OpenAI key at MCP server startup |
-| `openclaw-context-embeddings` | Reads `process.env.OPENAI_API_KEY` (set by this plugin at boot) |
+| `context-embeddings` | Reads `process.env.OPENAI_API_KEY` (set by this plugin at boot) |
 | `openclaw-tavily` | JS SDK, resolves Tavily API key at startup, sets `TAVILY_API_KEY` env var |

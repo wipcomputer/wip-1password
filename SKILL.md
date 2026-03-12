@@ -1,11 +1,11 @@
 ---
 name: wip-1password
-description: OpenClaw plugin for 1Password secrets via JS SDK. Resolves op:// references at startup, provides agent tools for reading/writing secrets, fully headless via service account.
+description: AI plugin (Claude Code, OpenClaw) for 1Password secrets via JS SDK. Resolves op:// references at startup, provides agent tools for reading/writing secrets, fully headless via service account.
 license: MIT
 interface: [module, mcp, openclaw-plugin, skill]
 metadata:
   display-name: "1Password Secrets"
-  version: "0.2.1".2.0"
+  version: "0.2.1"
   homepage: "https://github.com/wipcomputer/wip-1password"
   author: "Parker Todd Brooks"
   category: security
@@ -32,7 +32,7 @@ compatibility: Requires Node.js 18+, 1Password Teams/Business/Enterprise with se
 
 # wip-1password
 
-OpenClaw plugin for 1Password secrets. Uses the official JavaScript SDK with service accounts for fully headless operation... no desktop app, no biometrics, no popups.
+AI plugin (Claude Code, OpenClaw) for 1Password secrets. Uses the official JavaScript SDK with service accounts for fully headless operation... no desktop app, no biometrics, no popups.
 
 ## When to Use This Skill
 
