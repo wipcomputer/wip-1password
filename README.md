@@ -4,7 +4,9 @@
 
 # 1Password Secrets
 
-AI plugin (Claude Code, OpenClaw) for 1Password secrets. Uses the official JavaScript SDK with service accounts for fully headless operation... no desktop app, no biometrics, no popups.
+Give your AI secure access to 1Password. Never copy-paste an API key into a chat window again. Your agent reads secrets directly from the vault at runtime.
+
+Works with Claude Code, OpenClaw, and any MCP-compatible agent. Also ships as a Node.js module you can import into your own tools. Fully headless via service accounts... no desktop app, no biometrics, no popups.
 
 ## Teach Your AI to Use 1Password Secrets
 
@@ -32,13 +34,10 @@ Your agent will read the repo, explain everything, and do a dry-run install firs
 
 ## What It Does
 
-1. **Gives agents tools to read and write secrets on demand** ... Agents call `op_read_secret` to pull a key from 1Password at runtime, `op_list_items` to discover what's available, or `op_write_secret` to store new credentials.
-
-2. **MCP server for Claude Code** ... `mcp-server.mjs` provides 1Password access directly from Claude Code via MCP. Uses the `op` CLI with service account token.
-
-3. **Resolves `op://` references in config at startup** ... Replace plaintext API keys with `op://Agent Secrets/Item/field` references. The plugin resolves them to real values in memory when your agent boots. The plaintext key never touches disk.
-
-4. **CLI for diagnostics** ... `openclaw op-secrets test` verifies 1Password connectivity. `openclaw op-secrets read` shows a redacted preview of any secret.
+1. **Your agent can read and write secrets** ... API keys, tokens, credentials. No more pasting.
+2. **Works in Claude Code out of the box** ... MCP server connects automatically.
+3. **Secrets stay off disk** ... Config files use references, real values only exist in memory.
+4. **Debug without exposing secrets** ... Test connectivity and preview values safely.
 
 ## Documentation
 
